@@ -48,12 +48,17 @@ def validate(fields: dict) -> list[str]:
     return missing
 
 
-def render_posting(client_specific_benefits, employment_type="Vollzeit", output_path="output.docx", **fields):
+def render_posting(client_specific_benefits, employment_type="Vollzeit", reference_number="",
+                    salary_info="", output_path="output.docx", **fields):
     """
     Baut eine fertige Stellenanzeige aus strukturierten Feldern.
 
     fields erwartet mind.: job_title, client_description, location,
     start_date, tasks (list), profile (list)
+
+    reference_number und salary_info sind optional (professionelleres
+    Erscheinungsbild, wenn der Kunde diese Angaben mitliefert – siehe
+    README, Abschnitt "Erweiterte Felder").
     """
     missing = validate(fields)
     if missing:
@@ -69,6 +74,8 @@ def render_posting(client_specific_benefits, employment_type="Vollzeit", output_
         "agency_logo": InlineImage(doc, LOGO_PATH, width=Mm(45)),
         **fields,
         "employment_type": employment_type,
+        "reference_number": reference_number,
+        "salary_info": salary_info,
         "title_display": title_display,
         "benefits": client_specific_benefits + AGENCY_STANDARD_BENEFITS,
     }
@@ -103,3 +110,35 @@ if __name__ == "__main__":
         output_path=os.path.join(_REPO_ROOT, "examples", "generated_example.docx"),
     )
     print("Anzeige erstellt: examples/generated_example.docx")
+
+    # Zweites Beispiel: Input ist kein Notizzettel, sondern ein gut
+    # strukturiertes Kundendokument (examples/rohdaten_kundendokument_beispiel.docx).
+    # In der Praxis übernimmt der KI-Strukturierungsschritt (nicht Teil dieser
+    # Datei, siehe README) das Auslesen; hier die daraus resultierenden Felder,
+    # inkl. der zusätzlichen, aus dem Dokument stammenden Angaben
+    # (Referenznummer, Gehaltsrahmen) für ein professionelleres Erscheinungsbild.
+    render_posting(
+        client_specific_benefits=[
+            "Übernahmeoption nach Arbeitnehmerüberlassung",
+        ],
+        employment_type="Arbeitnehmerüberlassung mit Übernahmeoption",
+        reference_number="BRE-2026-0417",
+        salary_info="58.000 - 65.000 € brutto/Jahr, je nach Erfahrung",
+        job_title="Konstrukteur Strukturbauteile",
+        client_description="Unternehmen der Luft- und Raumfahrtbranche",
+        location="Bremen",
+        start_date="zum nächstmöglichen Zeitpunkt",
+        tasks=[
+            "Konstruktion von Strukturbauteilen in CATIA V5",
+            "Erstellung und Pflege technischer Zeichnungen nach Luftfahrtnormen",
+            "Abstimmung mit Stress-Engineering und Fertigung",
+        ],
+        profile=[
+            "Abgeschlossenes Studium Maschinenbau/Luft- und Raumfahrttechnik oder vergleichbar",
+            "Mind. 3 Jahre Erfahrung in der Strukturkonstruktion, idealerweise Luftfahrt",
+            "Sehr gute CATIA V5-Kenntnisse",
+            "Gute Deutsch- und Englischkenntnisse",
+        ],
+        output_path=os.path.join(_REPO_ROOT, "examples", "generated_example_from_document.docx"),
+    )
+    print("Anzeige erstellt: examples/generated_example_from_document.docx")
