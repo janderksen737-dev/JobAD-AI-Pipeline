@@ -31,7 +31,8 @@ Freitext (Rohnotiz)
     │
     ▼
 KI-Strukturierung  →  Felder (job_title, location, tasks, profile, ...)
-    │
+    │                  siehe engine/structuring_prompt.md für den
+    │                  vollständigen Prompt inkl. Validierungsregeln
     ▼
 Validierung        →  fehlende Pflichtfelder werden zurückgemeldet, nicht erfunden
     │
@@ -49,7 +50,9 @@ indeed_integration/indeed_client.py  →  Payload im offiziellen
 ## Projektstruktur
 
 ```
-engine/                  Rendering-Engine (docxtpl-basiert)
+engine/                  Rendering-Engine (docxtpl-basiert) +
+                          structuring_prompt.md (der KI-Strukturierungs-
+                          Prompt, Schema und getestete Beispiele)
 templates/                Word-Vorlage + Logo + Icons (eigenes Design,
                            recherchebasiert auf aktuelle Best Practices für
                            Stellenanzeigen)
