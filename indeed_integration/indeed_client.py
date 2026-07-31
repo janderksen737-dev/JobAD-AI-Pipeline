@@ -7,12 +7,19 @@ Baut den echten GraphQL-Payload nach Indeeds offiziellem Schema
 schickt ihn an einen lokalen Mock-Endpunkt, der wie Indeed antwortet.
 """
 import json
+import logging
+import os
+import sys
 import threading
 import uuid
 import datetime
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
 import requests
+
+logger = logging.getLogger(__name__)
+
+_REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 # ---------- 1. Mock-Server (simuliert Indeeds echtes Antwortverhalten) ----------
@@ -75,10 +82,19 @@ def start_mock_server():
 # ---------- 2. Payload-Builder: unsere Engine-Daten -> Indeed-Schema ----------
 
 def build_indeed_payload(job_title, employment_type, location, start_date,
-                          tasks, profile, benefits, agency, job_posting_id=None):
+                          tasks, profile, benefits, agency, client_description,
+                          job_posting_id=None):
     """
     Baut den GraphQL-Request exakt nach Indeeds createSourcedJobPostings-Schema
     (siehe docs.indeed.com/job-sync-api/job-sync-api-guide).
+
+    client_description: die anonymisierte Branchenbeschreibung des Endkunden
+    (von der KI-Strukturierung erzeugt, siehe engine/structuring_prompt.md,
+    Regel 3: "Kundennamen werden nie übernommen"). Das ist NICHT der echte
+    Firmenname des Endkunden, sondern pro Job unterschiedlich, je nach
+    Branche/Kontext (z.B. "Unternehmen für Flugzeugbauteile" vs. "international
+    tätiges Unternehmen der Luft- und Raumfahrtbranche") — anders als vorher,
+    wo hier fuer jeden Job derselbe fest einprogrammierte String stand.
     """
     description_html = (
         f"<h2>Ihre Aufgaben</h2><ul>{''.join(f'<li>{t}</li>' for t in tasks)}</ul>"
@@ -109,7 +125,7 @@ def build_indeed_payload(job_title, employment_type, location, start_date,
                 },
                 "metadata": {
                     "jobSource": {
-                        "companyName": "Unternehmen der Luft- und Raumfahrtbranche",  # anonymisiert
+                        "companyName": client_description,  # anonymisiert, pro Job unterschiedlich
                         "sourceName": agency["agency_name"],
                         "sourceType": "Employer",
                     },
@@ -136,6 +152,10 @@ def build_indeed_payload(job_title, employment_type, location, start_date,
 # ---------- 3. Testlauf ----------
 
 if __name__ == "__main__":
+    sys.path.insert(0, _REPO_ROOT)
+    from utils.logging_setup import setup_logging
+
+    setup_logging()
     start_mock_server()
 
     agency = {
@@ -151,6 +171,7 @@ if __name__ == "__main__":
         employment_type="Vollzeit",
         location="Hamburg",
         start_date="August",
+        client_description="Unternehmen im Bereich Avioniksysteme",
         tasks=[
             "Durchführung von Systemtests an Avioniksystemen",
             "Dokumentation der Testergebnisse nach DO-178C",
@@ -170,9 +191,9 @@ if __name__ == "__main__":
         agency=agency,
     )
 
-    print("=== Gesendeter Payload (identisch zum echten Indeed-Format) ===")
-    print(json.dumps(payload["variables"], indent=2, ensure_ascii=False))
+    logger.info("=== Gesendeter Payload (identisch zum echten Indeed-Format) ===")
+    logger.info(json.dumps(payload["variables"], indent=2, ensure_ascii=False))
 
     resp = requests.post("http://localhost:8891/graphql", json=payload)
-    print("\n=== Antwort vom Mock-Endpunkt (simuliert Indeeds echtes Antwortformat) ===")
-    print(json.dumps(resp.json(), indent=2, ensure_ascii=False))
+    logger.info("=== Antwort vom Mock-Endpunkt (simuliert Indeeds echtes Antwortformat) ===")
+    logger.info(json.dumps(resp.json(), indent=2, ensure_ascii=False))

@@ -30,14 +30,15 @@ kostet und zu uneinheitlicher Qualität führt.
 Freitext (Rohnotiz)
     │
     ▼
-KI-Strukturierung  →  Felder (job_title, location, tasks, profile, ...)
-    │                  siehe engine/structuring_prompt.md für den
-    │                  vollständigen Prompt inkl. Validierungsregeln
+engine/structuring.py  →  KI-Strukturierung via Anthropic API (Tool-Use,
+    │                     schema-validiert) → Felder (job_title, location,
+    │                     tasks, profile, ...). Prompt/Schema/Beispiele:
+    │                     engine/structuring_prompt.md
     ▼
 Validierung        →  fehlende Pflichtfelder werden zurückgemeldet, nicht erfunden
     │
     ▼
-engine/engine.py   →  befüllt templates/template.docx (docxtpl)
+engine/engine.py   →  befüllt das Kunden-Template (docxtpl)
     │
     ▼
 fertige .docx-Stellenanzeige
@@ -47,18 +48,27 @@ indeed_integration/indeed_client.py  →  Payload im offiziellen
                                         Indeed-Job-Sync-API-Format (GraphQL)
 ```
 
+Orchestriert wird das alles von `run_pipeline.py` (ein Auftrag pro Aufruf,
+siehe "Verwendung" unten) — kein Webservice, der Betreiber führt die
+Pipeline manuell pro Kundenauftrag aus.
+
 ## Projektstruktur
 
 ```
-engine/                  Rendering-Engine (docxtpl-basiert) +
-                          structuring_prompt.md (der KI-Strukturierungs-
-                          Prompt, Schema und getestete Beispiele)
-templates/                Word-Vorlage + Logo + Icons (eigenes Design,
-                           recherchebasiert auf aktuelle Best Practices für
-                           Stellenanzeigen)
+run_pipeline.py            Orchestrator: ein CLI-Aufruf pro Kundenauftrag
+engine/                    Rendering-Engine (docxtpl-basiert), structuring.py
+                           (Anthropic-API-Anbindung) + structuring_prompt.md
+                           (der KI-Strukturierungs-Prompt, Schema, Beispiele)
+clients/                   Pro-Kunde-Konfiguration (Agentur-Identität,
+                           Template, Standard-Benefits) – siehe clients/README.md
+config/                    Laedt/validiert clients/<slug>/config.yaml
+utils/                     Logging-Setup, Pfad-Sicherheit (Slug-Validierung)
+templates/                 Standard-Word-Vorlage + Logo + Icons (eigenes
+                           Design, recherchebasiert)
 indeed_integration/        Payload-Generator + Mock-Server für die
                            Indeed Job Sync API
 examples/                  Beispiel-Output (befüllte Stellenanzeigen)
+tests/                     pytest-Suite (keine echten API-Aufrufe/Ports)
 ```
 
 ## Beispiele
@@ -94,14 +104,29 @@ Optional, werden nur angezeigt, wenn vorhanden (kein erfundener Platzhalter):
 ## Verwendung
 
 ```bash
-pip install -r requirements.txt
+pip install -r requirements-dev.txt   # oder requirements.txt ohne Tests
 
-# Stellenanzeige aus strukturierten Daten erzeugen
+cp .env.example .env                  # ANTHROPIC_API_KEY eintragen
+
+# Kompletten Auftrag ausführen: Freitext -> Anzeige + Indeed-Payload
+python run_pipeline.py --client talentbridge_demo --job-slug avionik-hamburg \
+    --input rohnotiz.txt
+# Ergebnis unter output/talentbridge_demo/avionik-hamburg_<timestamp>/
+
+# Einzelne Bausteine weiterhin standalone lauffähig (Demo-/Regressionszweck):
 python engine/engine.py
-
-# Indeed-Payload bauen und gegen lokalen Mock-Endpunkt testen
 python indeed_integration/indeed_client.py
+
+# Tests
+pytest -q
 ```
+
+Neuen Kunden anlegen: siehe [`clients/README.md`](clients/README.md).
+
+**Hinweis zu weiteren Jobbörsen:** aktuell ist nur Indeed angebunden. Ein
+zweites Board (z.B. StepStone) ist bewusst noch nicht gebaut — deren
+Zugang zu einer Self-Service-Posting-API ist ungeklärt (anders als bei
+Indeed) und müsste zuerst recherchiert werden.
 
 ## Technischer Umfang
 

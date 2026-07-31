@@ -1,42 +1,32 @@
 """
-Engine: befüllt die Stellenanzeigen-Vorlage (templates/template.docx) mit
-strukturierten Job-Daten. Nutzt docxtpl (Jinja2-Syntax direkt in Word-Platzhaltern).
+Engine: befüllt die Stellenanzeigen-Vorlage mit strukturierten Job-Daten.
+Nutzt docxtpl (Jinja2-Syntax direkt in Word-Platzhaltern).
 
 Typischer Ablauf im Gesamtprojekt:
     Freitext (Kundennotiz)
-        -> KI-Strukturierung in Felder (nicht Teil dieser Datei, siehe README)
+        -> KI-Strukturierung in Felder (engine/structuring.py)
         -> Validierung (fehlende Pflichtfelder werden zurückgemeldet, nicht erfunden)
         -> engine.render_posting(...)  <- diese Datei
         -> fertiges .docx
         -> indeed_integration/indeed_client.py für die Jobbörsen-Anbindung
+
+Agentur-Identität, Standard-Benefits und Vorlagenpfade sind seit der
+Mehrmandantenfähigkeit nicht mehr hier fest einprogrammiert, sondern kommen
+pro Kunde aus clients/<slug>/config.yaml (siehe config/client_config.py).
 """
+import logging
 import os
-from docxtpl import DocxTemplate, InlineImage
+
 from docx.shared import Mm
+from docxtpl import DocxTemplate, InlineImage
+
+logger = logging.getLogger(__name__)
 
 _REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-TEMPLATE_PATH = os.path.join(_REPO_ROOT, "templates", "template.docx")
-LOGO_PATH = os.path.join(_REPO_ROOT, "templates", "logo.png")
 
-# Feste Vermittlungs-Anker (Beispieldaten einer fiktiven Muster-Agentur)
-AGENCY = {
-    "agency_name": "TalentBridge Personalvermittlung GmbH",
-    "agency_street": "Musterstraße 12",
-    "agency_zip_city": "80331 München",
-    "agency_phone": "+49 89 1234567",
-    "agency_email": "kontakt@talentbridge-beispiel.de",
-    "agency_website": "www.talentbridge-beispiel.de",
-    "contact_person": "Max Mustermann",
-}
-
-# Standard-Perks, die auf (fast) jeder Anzeige stehen, unabhängig vom Kunden
-AGENCY_STANDARD_BENEFITS = [
-    "Persönliche und individuelle Betreuung durch unser erfahrenes Berater-Team",
-    "Langfristige Perspektive mit Option auf Übernahme beim Kundenunternehmen",
-    "Zugang zu einem breiten Netzwerk an Unternehmen der Luft- und Raumfahrtbranche",
-]
-
-REQUIRED_FIELDS = ["job_title", "location", "tasks", "profile"]
+# Pflichtfelder gemaess dem Schema in engine/structuring_prompt.md.
+# start_date ist dort explizit als Pflichtfeld markiert.
+REQUIRED_FIELDS = ["job_title", "location", "start_date", "tasks", "profile"]
 
 
 def validate(fields: dict) -> list[str]:
@@ -48,10 +38,25 @@ def validate(fields: dict) -> list[str]:
     return missing
 
 
-def render_posting(client_specific_benefits, employment_type="Vollzeit", reference_number="",
-                    salary_info="", output_path="output.docx", **fields):
+def render_posting(
+    agency: dict,
+    standard_benefits: list[str],
+    template_path: str | os.PathLike,
+    logo_path: str | os.PathLike,
+    client_specific_benefits: list[str],
+    employment_type: str = "Vollzeit",
+    reference_number: str = "",
+    salary_info: str = "",
+    output_path: str = "output.docx",
+    **fields,
+):
     """
     Baut eine fertige Stellenanzeige aus strukturierten Feldern.
+
+    agency: dict mit agency_name, agency_street, agency_zip_city, agency_phone,
+        agency_email, agency_website, contact_person (siehe config/client_config.py)
+    standard_benefits: Vorteile, die auf (fast) jeder Anzeige dieses Kunden stehen
+    template_path / logo_path: Pfade zu Word-Vorlage und Logo dieses Kunden
 
     fields erwartet mind.: job_title, client_description, location,
     start_date, tasks (list), profile (list)
@@ -64,27 +69,40 @@ def render_posting(client_specific_benefits, employment_type="Vollzeit", referen
     if missing:
         raise ValueError(f"Pflichtfelder fehlen, bitte ergänzen: {', '.join(missing)}")
 
-    doc = DocxTemplate(TEMPLATE_PATH)
+    doc = DocxTemplate(template_path)
     title_display = f"{fields['job_title']} (m/w/d)"
     if employment_type:
         title_display += f" in {employment_type}"
 
     context = {
-        **AGENCY,
-        "agency_logo": InlineImage(doc, LOGO_PATH, width=Mm(45)),
+        **agency,
+        "agency_logo": InlineImage(doc, str(logo_path), width=Mm(45)),
         **fields,
         "employment_type": employment_type,
         "reference_number": reference_number,
         "salary_info": salary_info,
         "title_display": title_display,
-        "benefits": client_specific_benefits + AGENCY_STANDARD_BENEFITS,
+        "benefits": client_specific_benefits + standard_benefits,
     }
     doc.render(context)
     doc.save(output_path)
+    logger.info("Anzeige erstellt: %s", output_path)
     return output_path
 
 
 if __name__ == "__main__":
+    import sys
+
+    sys.path.insert(0, _REPO_ROOT)
+    from config.client_config import load_client_config
+    from utils.logging_setup import setup_logging
+
+    setup_logging()
+    client_config = load_client_config("talentbridge_demo")
+    agency = client_config.agency.model_dump()
+    template_path = client_config.resolved_template_path()
+    logo_path = client_config.resolved_logo_path()
+
     # Beispiel-Rohnotiz (Referenz, unstrukturiert):
     # "brauchen dringend jemanden für avionik-systemtest bei kunde in hamburg,
     #  sicherheitsüberprüfung ist pflicht (Ü2), schichtarbeit möglich (2-schicht),
@@ -92,6 +110,10 @@ if __name__ == "__main__":
     #  und matlab/simulink zwingend, start august, vertrag 18 monate mit
     #  übernahmeoption, reisebereitschaft ca 20%"
     render_posting(
+        agency=agency,
+        standard_benefits=client_config.standard_benefits,
+        template_path=template_path,
+        logo_path=logo_path,
         client_specific_benefits=["18-monatiger Vertrag mit klarer Übernahmeoption"],
         job_title="Avionik-Systemtestingenieur",
         client_description="Unternehmen im Bereich Avioniksysteme",
@@ -109,15 +131,18 @@ if __name__ == "__main__":
         ],
         output_path=os.path.join(_REPO_ROOT, "examples", "generated_example.docx"),
     )
-    print("Anzeige erstellt: examples/generated_example.docx")
 
     # Zweites Beispiel: Input ist kein Notizzettel, sondern ein gut
     # strukturiertes Kundendokument (examples/rohdaten_kundendokument_beispiel.docx).
-    # In der Praxis übernimmt der KI-Strukturierungsschritt (nicht Teil dieser
-    # Datei, siehe README) das Auslesen; hier die daraus resultierenden Felder,
-    # inkl. der zusätzlichen, aus dem Dokument stammenden Angaben
-    # (Referenznummer, Gehaltsrahmen) für ein professionelleres Erscheinungsbild.
+    # In der Praxis übernimmt der KI-Strukturierungsschritt (engine/structuring.py)
+    # das Auslesen; hier die daraus resultierenden Felder, inkl. der
+    # zusätzlichen, aus dem Dokument stammenden Angaben (Referenznummer,
+    # Gehaltsrahmen) für ein professionelleres Erscheinungsbild.
     render_posting(
+        agency=agency,
+        standard_benefits=client_config.standard_benefits,
+        template_path=template_path,
+        logo_path=logo_path,
         client_specific_benefits=[
             "Übernahmeoption nach Arbeitnehmerüberlassung",
         ],
@@ -141,4 +166,3 @@ if __name__ == "__main__":
         ],
         output_path=os.path.join(_REPO_ROOT, "examples", "generated_example_from_document.docx"),
     )
-    print("Anzeige erstellt: examples/generated_example_from_document.docx")

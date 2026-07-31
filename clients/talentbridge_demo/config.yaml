@@ -1,0 +1,26 @@
+# Konfiguration fuer den Demo-/Referenzkunden "TalentBridge" (fiktive Muster-Agentur).
+# Diese Werte stammen aus der urspruenglichen, fest einprogrammierten Demo in engine.py.
+slug: talentbridge_demo
+
+agency:
+  agency_name: "TalentBridge Personalvermittlung GmbH"
+  agency_street: "Musterstraße 12"
+  agency_zip_city: "80331 München"
+  agency_phone: "+49 89 1234567"
+  agency_email: "kontakt@talentbridge-beispiel.de"
+  agency_website: "www.talentbridge-beispiel.de"
+  contact_person: "Max Mustermann"
+
+template:
+  docx_path: "templates/template.docx"
+  logo_path: "templates/logo.png"
+
+standard_benefits:
+  - "Persönliche und individuelle Betreuung durch unser erfahrenes Berater-Team"
+  - "Langfristige Perspektive mit Option auf Übernahme beim Kundenunternehmen"
+  - "Zugang zu einem breiten Netzwerk an Unternehmen der Luft- und Raumfahrtbranche"
+
+# Freitext, der dem System-Prompt der KI-Strukturierung angehaengt wird, damit
+# derselbe Prompt auch fuer Kunden ausserhalb der Luft- und Raumfahrtbranche
+# funktioniert, ohne Code aendern zu muessen.
+industry_context: "Diese Personalvermittlung ist auf die Luft- und Raumfahrtbranche spezialisiert."

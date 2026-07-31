@@ -1,0 +1,21 @@
+# Test-Fixture, keine echten Kundendaten.
+slug: sample_client
+
+agency:
+  agency_name: "Sample Recruiting GmbH"
+  agency_street: "Teststraße 1"
+  agency_zip_city: "12345 Teststadt"
+  agency_phone: "+49 30 0000000"
+  agency_email: "test@sample-recruiting.example"
+  agency_website: "www.sample-recruiting.example"
+  contact_person: "Test Person"
+
+template:
+  docx_path: "templates/template.docx"
+  logo_path: "templates/logo.png"
+
+standard_benefits:
+  - "Testvorteil A"
+  - "Testvorteil B"
+
+industry_context: "Test-Branche fuer automatisierte Tests."

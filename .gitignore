@@ -2,3 +2,8 @@ __pycache__/
 *.pyc
 .DS_Store
 examples/generated_example.docx
+examples/generated_example_from_document.docx
+.env
+output/
+.pytest_cache/
+.venv/
