@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}RecruitFlow — Vor der Freigabe prüfen{% endblock %}
+{% block content %}
+  <h1>Vor der Freigabe prüfen</h1>
+
+  <span class="badge">✓ Nichts erfunden — jedes Feld stammt aus deiner Notiz, du kannst trotzdem noch korrigieren</span>
+
+  {% if error %}
+    <div class="error" style="margin-top: 16px;">{{ error }}</div>
+  {% endif %}
+
+  <form method="POST" action="{{ url_for('confirm') }}" style="margin-top: 20px;">
+    <input type="hidden" name="client_slug" value="{{ client_slug }}">
+
+    <div class="two-col">
+      <div class="field-group">
+        <label for="job_title">Position</label>
+        <input type="text" id="job_title" name="job_title" value="{{ fields.job_title }}">
+      </div>
+      <div class="field-group">
+        <label for="location">Standort</label>
+        <input type="text" id="location" name="location" value="{{ fields.location }}">
+      </div>
+    </div>
+
+    <div class="field-group">
+      <label for="client_description">Kunde (Beschreibung, kein Klarname nötig)</label>
+      <input type="text" id="client_description" name="client_description" value="{{ fields.client_description }}">
+    </div>
+
+    <div class="two-col">
+      <div class="field-group">
+        <label for="start_date">Start</label>
+        <input type="text" id="start_date" name="start_date" value="{{ fields.start_date }}">
+      </div>
+      <div class="field-group">
+        <label for="employment_type">Vertrag</label>
+        <input type="text" id="employment_type" name="employment_type" value="{{ employment_type }}">
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div class="field-group">
+        <label for="salary_info">Gehalt (optional)</label>
+        <input type="text" id="salary_info" name="salary_info" value="{{ salary_info }}">
+      </div>
+      <div class="field-group">
+        <label for="reference_number">Referenz (optional)</label>
+        <input type="text" id="reference_number" name="reference_number" value="{{ reference_number }}">
+      </div>
+    </div>
+
+    <label for="tasks">Aufgaben (eine Zeile pro Punkt)</label>
+    <textarea id="tasks" name="tasks" class="compact">{{ tasks_text }}</textarea>
+
+    <label for="profile">Profil (eine Zeile pro Punkt)</label>
+    <textarea id="profile" name="profile" class="compact">{{ profile_text }}</textarea>
+
+    <label for="benefits">Benefits — kundenspezifisch (eine Zeile pro Punkt, optional)</label>
+    <textarea id="benefits" name="benefits" class="compact">{{ benefits_text }}</textarea>
+    <p class="hint">Standard-Benefits der Agentur werden automatisch ergänzt, unabhängig von diesem Feld.</p>
+
+    <button type="submit">Freigeben &amp; Anzeige erzeugen</button>
+    <a class="button" href="{{ url_for('form') }}" style="margin-left: 10px;">Abbrechen</a>
+  </form>
+{% endblock %}

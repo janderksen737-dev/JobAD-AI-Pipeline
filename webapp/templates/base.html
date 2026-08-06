@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}RecruitFlow{% endblock %}</title>
+  <style>
+    :root {
+      --paper: #F7F5F0;
+      --paper-raised: #FFFFFF;
+      --ink: #1C1A17;
+      --ink-soft: #4A4640;
+      --pine: #2B5C4F;
+      --pine-soft: #E4ECE9;
+      --brass: #8B7355;
+      --rust: #A8402E;
+      --rust-soft: #F5E6E2;
+      --line: rgba(28, 26, 23, 0.14);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      display: flex;
+      justify-content: center;
+      padding: 48px 20px 80px;
+    }
+    .wrap { width: 100%; max-width: 640px; }
+    .eyebrow {
+      font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--brass); font-weight: 600;
+    }
+    h1 { font-size: 24px; margin: 8px 0 24px; letter-spacing: -0.01em; }
+    label { display: block; font-size: 13px; font-weight: 600; color: var(--ink-soft); margin-bottom: 6px; }
+    select, textarea, input[type="text"] {
+      width: 100%; font: inherit; font-size: 15px; padding: 12px 14px;
+      border: 1px solid var(--line); border-radius: 8px; background: var(--paper-raised);
+      color: var(--ink); margin-bottom: 20px;
+    }
+    textarea { min-height: 180px; resize: vertical; font-family: inherit; }
+    textarea.compact { min-height: 90px; }
+    .field-group { margin-bottom: 4px; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
+    .hint { font-size: 12px; color: var(--ink-soft); margin: -14px 0 16px; }
+    button {
+      font: inherit; font-size: 14px; font-weight: 600; padding: 12px 24px;
+      border-radius: 8px; border: 1px solid var(--pine); background: var(--pine);
+      color: #fff; cursor: pointer;
+    }
+    button:hover { opacity: 0.92; }
+    a.button {
+      display: inline-block; text-decoration: none; font-weight: 600; font-size: 14px;
+      padding: 10px 18px; border-radius: 8px; border: 1px solid var(--pine);
+      color: var(--pine); margin-right: 10px; margin-top: 4px;
+    }
+    .card {
+      background: var(--paper-raised); border: 1px solid var(--line); border-radius: 10px;
+      padding: 20px 24px; margin-bottom: 20px;
+    }
+    .error { background: var(--rust-soft); color: var(--rust); border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; font-size: 14px; }
+    .badge { display: inline-flex; background: var(--pine-soft); color: var(--pine); font-size: 12.5px; font-weight: 600; padding: 6px 12px; border-radius: 20px; }
+    .field-row { display: grid; grid-template-columns: 130px 1fr; gap: 14px; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+    .field-row:last-child { border-bottom: none; }
+    .field-key { font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--brass); font-weight: 600; padding-top: 2px; }
+    ul.plain { margin: 0; padding-left: 18px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="eyebrow">RecruitFlow — Prototyp</div>
+    {% block content %}{% endblock %}
+  </div>
+</body>
+</html>

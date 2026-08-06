@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}RecruitFlow — Anzeige fertig{% endblock %}
+{% block content %}
+  <h1>Fertig</h1>
+
+  <span class="badge">✓ Nichts erfunden — jedes Feld stammt aus der Notiz</span>
+
+  <div class="card" style="margin-top: 20px;">
+    <div class="field-row"><div class="field-key">Position</div><div>{{ fields.job_title }}</div></div>
+    <div class="field-row"><div class="field-key">Kunde</div><div>{{ fields.client_description }}</div></div>
+    <div class="field-row"><div class="field-key">Standort</div><div>{{ fields.location }}</div></div>
+    <div class="field-row"><div class="field-key">Start</div><div>{{ fields.start_date }}</div></div>
+    <div class="field-row"><div class="field-key">Vertrag</div><div>{{ fields.employment_type }}</div></div>
+    {% if fields.salary_info %}
+    <div class="field-row"><div class="field-key">Gehalt</div><div>{{ fields.salary_info }}</div></div>
+    {% endif %}
+    {% if fields.reference_number %}
+    <div class="field-row"><div class="field-key">Referenz</div><div>{{ fields.reference_number }}</div></div>
+    {% endif %}
+    <div class="field-row"><div class="field-key">Aufgaben</div><div><ul class="plain">
+      {% for t in fields.tasks %}<li>{{ t }}</li>{% endfor %}
+    </ul></div></div>
+    <div class="field-row"><div class="field-key">Profil</div><div><ul class="plain">
+      {% for p in fields.profile %}<li>{{ p }}</li>{% endfor %}
+    </ul></div></div>
+    <div class="field-row"><div class="field-key">Benefits</div><div><ul class="plain">
+      {% for b in fields.benefits %}<li>{{ b }}</li>{% endfor %}
+    </ul></div></div>
+  </div>
+
+  <a class="button" href="{{ docx_url }}">Stellenanzeige (.docx) herunterladen</a>
+  <a class="button" href="{{ payload_url }}">Indeed-Payload (.json) herunterladen</a>
+
+  <p style="margin-top: 24px;"><a href="{{ url_for('form') }}" style="color: var(--ink-soft); font-size: 14px;">← Neue Anzeige erstellen</a></p>
+{% endblock %}

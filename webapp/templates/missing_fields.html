@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}RecruitFlow — Angaben fehlen{% endblock %}
+{% block content %}
+  <h1>Es fehlen noch Angaben</h1>
+
+  <div class="card">
+    <p>Aus der Notiz konnten diese Pflichtfelder nicht erkannt werden — es wurde nichts erfunden, und es wurden
+      keine Dateien erzeugt:</p>
+    <ul class="plain">
+      {% for field in missing %}
+        <li>{{ field }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+
+  <p style="color: var(--ink-soft); font-size: 14px;">Ergaenze die fehlenden Angaben in der Notiz und sende sie
+    erneut.</p>
+
+  <a class="button" href="{{ url_for('form') }}">Zurueck zum Formular</a>
+{% endblock %}

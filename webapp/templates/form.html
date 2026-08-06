@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}RecruitFlow — Neue Stellenanzeige{% endblock %}
+{% block content %}
+  <h1>Neue Stellenanzeige erstellen</h1>
+
+  {% if error %}<div class="error">{{ error }}</div>{% endif %}
+
+  {% if not clients %}
+    <div class="error">Keine Kundenkonfigurationen unter <code>clients/</code> gefunden.</div>
+  {% endif %}
+
+  <form method="post" action="{{ url_for('generate') }}">
+    <label for="client">Kunde</label>
+    <select name="client" id="client">
+      {% for slug in clients %}
+        <option value="{{ slug }}">{{ slug }}</option>
+      {% endfor %}
+    </select>
+
+    <label for="raw_text">Kundennotiz / Anforderung (Freitext)</label>
+    <textarea name="raw_text" id="raw_text" placeholder="z.B. Brauchen einen Konstrukteur fuer unseren Kunden in Bremen, Luft- und Raumfahrtbranche. Aufgaben: ..."></textarea>
+
+    <button type="submit">Anzeige erstellen</button>
+  </form>
+{% endblock %}
