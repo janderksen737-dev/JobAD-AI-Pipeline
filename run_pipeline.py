@@ -65,7 +65,7 @@ def run(client_slug: str, job_slug: str, input_path: Path) -> int:
 
     fields = structured.fields.model_dump()
     job_specific_benefits = fields.pop("benefits") or []
-    employment_type = fields.pop("employment_type") or "Vollzeit"
+    employment_type = fields.pop("employment_type") or ""
     reference_number = fields.pop("reference_number") or ""
     salary_info = fields.pop("salary_info") or ""
     # verbleibend in fields: job_title, client_description, location, start_date, tasks, profile

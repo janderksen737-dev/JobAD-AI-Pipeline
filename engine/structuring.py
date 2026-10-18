@@ -4,9 +4,10 @@ in das Feld-Schema um, das engine.render_posting() erwartet.
 
 Der eigentliche Prompt lebt in engine/structuring_prompt.md (single source of
 truth, siehe load_system_prompt) - hier steht nur die Anbindung an die
-Anthropic API mit erzwungener, schema-validierter Ausgabe (Tool-Use), damit
-"erfinde niemals fehlende Angaben" tatsaechlich durch Code garantiert wird
-und nicht nur durch den Prompt-Text erhofft.
+Anthropic API mit erzwungener, schema-validierter Ausgabe (Tool-Use). Das
+Schema erzwingt das Format der Antwort; "erfinde niemals fehlende Angaben"
+stuetzt sich auf den Prompt-Text plus die Pflichtfeld-Pruefung danach
+(engine.validate) - das ist keine Garantie, das Ergebnis sollte gelesen werden.
 """
 import re
 from pathlib import Path

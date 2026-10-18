@@ -16,6 +16,7 @@ pro Kunde aus clients/<slug>/config.yaml (siehe config/client_config.py).
 """
 import logging
 import os
+import re
 
 from docx.shared import Mm
 from docxtpl import DocxTemplate, InlineImage
@@ -23,6 +24,11 @@ from docxtpl import DocxTemplate, InlineImage
 logger = logging.getLogger(__name__)
 
 _REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+# Erkennt eine bereits vorhandene Gender-Endung am Ende des Jobtitels (z.B. von der
+# KI-Strukturierung schon angehaengt), damit sie nicht doppelt erscheint - deckt die
+# gaengigen Reihenfolgen/Trenner ab (m/w/d, w/m/d, m/w/x, d/m/w, mit "-" oder "/").
+_GENDER_SUFFIX_RE = re.compile(r"\s*\([mwdx](?:[/-][mwdx]){1,2}\)\s*$", re.IGNORECASE)
 
 # Pflichtfelder gemaess dem Schema in engine/structuring_prompt.md.
 # start_date ist dort explizit als Pflichtfeld markiert.
@@ -44,7 +50,7 @@ def render_posting(
     template_path: str | os.PathLike,
     logo_path: str | os.PathLike,
     client_specific_benefits: list[str],
-    employment_type: str = "Vollzeit",
+    employment_type: str = "",
     reference_number: str = "",
     salary_info: str = "",
     output_path: str = "output.docx",
@@ -70,7 +76,8 @@ def render_posting(
         raise ValueError(f"Pflichtfelder fehlen, bitte ergänzen: {', '.join(missing)}")
 
     doc = DocxTemplate(template_path)
-    title_display = f"{fields['job_title']} (m/w/d)"
+    job_title_clean = _GENDER_SUFFIX_RE.sub("", fields["job_title"])
+    title_display = f"{job_title_clean} (m/w/d)"
     if employment_type:
         title_display += f" in {employment_type}"
 
@@ -82,6 +89,7 @@ def render_posting(
         "reference_number": reference_number,
         "salary_info": salary_info,
         "title_display": title_display,
+        "job_title_clean": job_title_clean,
         "benefits": client_specific_benefits + standard_benefits,
     }
     doc.render(context)

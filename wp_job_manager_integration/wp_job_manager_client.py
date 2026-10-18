@@ -12,6 +12,8 @@ Getestet gegen eine lokale WP-Job-Manager-Testinstallation (Docker), nicht gegen
 echten Kunden - analog zum StepStone-Prototyp: zeigt, dass es technisch funktioniert,
 bevor ein echter Kunde seine Zugangsdaten teilt.
 """
+import html
+
 from playwright.sync_api import sync_playwright
 
 _SET_VALUE_JS = """(el, val) => {
@@ -59,8 +61,10 @@ def _discover_employment_type_ids(page) -> dict[str, str]:
 
 
 def _build_description_html(tasks: list[str], profile: list[str]) -> str:
-    tasks_html = "".join(f"<li>{t}</li>" for t in tasks)
-    profile_html = "".join(f"<li>{p}</li>" for p in profile)
+    """html.escape() auf jeden Textbaustein: ohne das koennte ein "<" im Kundentext das
+    Layout der Karriereseite des Kunden zerstoeren oder als Markup dort landen."""
+    tasks_html = "".join(f"<li>{html.escape(t)}</li>" for t in tasks)
+    profile_html = "".join(f"<li>{html.escape(p)}</li>" for p in profile)
     return (
         f"<h3>Ihre Aufgaben</h3><ul>{tasks_html}</ul>"
         f"<h3>Ihr Profil</h3><ul>{profile_html}</ul>"

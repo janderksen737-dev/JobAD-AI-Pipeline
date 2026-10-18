@@ -6,6 +6,7 @@ Baut den echten GraphQL-Payload nach Indeeds offiziellem Schema
 (jobsIngest.createSourcedJobPostings) aus unseren Engine-Daten und
 schickt ihn an einen lokalen Mock-Endpunkt, der wie Indeed antwortet.
 """
+import html
 import json
 import logging
 import os
@@ -96,10 +97,15 @@ def build_indeed_payload(job_title, employment_type, location, start_date,
     tätiges Unternehmen der Luft- und Raumfahrtbranche") — anders als vorher,
     wo hier fuer jeden Job derselbe fest einprogrammierte String stand.
     """
+    # html.escape() auf jeden KI-generierten Textbaustein: verhindert, dass ein "<" oder
+    # "&" im Kundentext das Layout zerstoert oder als Markup in die Indeed-Anzeige rutscht.
+    tasks_html = "".join(f"<li>{html.escape(t)}</li>" for t in tasks)
+    profile_html = "".join(f"<li>{html.escape(p)}</li>" for p in profile)
+    employment_line = f"{employment_type}, Start: {start_date}" if employment_type else f"Start: {start_date}"
     description_html = (
-        f"<h2>Ihre Aufgaben</h2><ul>{''.join(f'<li>{t}</li>' for t in tasks)}</ul>"
-        f"<h2>Ihr Profil</h2><ul>{''.join(f'<li>{p}</li>' for p in profile)}</ul>"
-        f"<h2>Beschäftigungsart</h2><p>{employment_type}, Start: {start_date}</p>"
+        f"<h2>Ihre Aufgaben</h2><ul>{tasks_html}</ul>"
+        f"<h2>Ihr Profil</h2><ul>{profile_html}</ul>"
+        f"<h2>Beschäftigungsart</h2><p>{html.escape(employment_line)}</p>"
     )
 
     job_posting_id = job_posting_id or f"talentbridge-{uuid.uuid4().hex[:10]}"

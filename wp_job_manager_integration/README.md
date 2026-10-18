@@ -2,7 +2,7 @@
 
 Automatisiert das Veroeffentlichen einer Stellenanzeige direkt im WordPress-Backend einer
 Personalvermittlung (WP Job Manager), als Alternative/Ergaenzung zu den Jobboard-Partner-APIs
-(Indeed, StepStone) — siehe MASTERPLAN.md fuer die strategische Einordnung.
+(Indeed, StepStone) — die strategische Einordnung steht im (nicht in diesem Repo enthaltenen) MASTERPLAN.md.
 
 **Warum:** ein Tech-Stack-Check der Tier-A-Zielagenturen (2026-08-04, `sales/target_agencies.md`)
 zeigte, dass mehrere davon WordPress mit eigenem/Standard-Jobbörsen-Plugin nutzen, ohne erkennbare

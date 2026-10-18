@@ -2,8 +2,8 @@
 
 Dieser Prompt ist der eigentliche "KI"-Schritt der Pipeline: er überführt
 unstrukturierten Kundeninput (Rohnotiz oder Anforderungsdokument) in das
-Feld-Schema, das `engine/engine.py` erwartet. Er wurde iterativ entwickelt
-und gegen mehrere reale Beispiele getestet (siehe unten).
+Feld-Schema, das `engine/engine.py` erwartet. Die Beispiele unten sind
+Demonstrationsbeispiele (keine echten Kundendaten).
 
 ## System-Prompt
 
@@ -125,9 +125,11 @@ Rohtext/Dokument → [dieser Prompt] → JSON (fields + missing_fields)
                   Rückfrage an Nutzer   engine.render_posting(**fields)
 ```
 
-Eine produktive Implementierung würde diesen Prompt über die
-[Anthropic API](https://docs.claude.com/en/api/messages) mit
-strukturierter JSON-Ausgabe aufrufen. Für dieses Projekt liegt der Fokus
-auf dem Prompt- und Schema-Design selbst; der Live-Aufruf ist bewusst
-nicht Teil dieses Repos, um keinen produktiven API-Key/Kosten für eine
-reine Portfolio-Demo vorauszusetzen.
+`engine/structuring.py` ruft diesen Prompt über die
+[Anthropic API](https://docs.claude.com/en/api/messages) per Tool-Use mit
+festem Schema (pydantic) auf; dafür wird ein eigener `ANTHROPIC_API_KEY`
+benötigt (siehe `.env.example`). Das Schema erzwingt das Ausgabeformat.
+Dass keine Angaben erfunden werden, sollen der Prompt (Regel 1) und die
+anschließende Prüfung der Pflichtfelder sicherstellen; beides ist keine
+Garantie, deshalb prüft ein Mensch das Ergebnis. Die Tests in `tests/`
+arbeiten mit einem vorgetäuschten Client und rufen die API nie echt auf.

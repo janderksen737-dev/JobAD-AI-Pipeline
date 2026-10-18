@@ -67,8 +67,15 @@ templates/                 Standard-Word-Vorlage + Logo + Icons (eigenes
                            Design, recherchebasiert)
 indeed_integration/        Payload-Generator + Mock-Server für die
                            Indeed Job Sync API
+stepstone_integration/     Prototyp: StepStone-JobFeed-XML + lokaler Mock
+                           (nicht an run_pipeline.py angebunden)
+wp_job_manager_integration/ Prototyp: Veröffentlichen im WordPress-Backend
+                           einer Agentur (nur lokale Testinstallation)
+webapp/                    Prototyp: Flask-Oberfläche um dieselbe Pipeline
 examples/                  Beispiel-Output (befüllte Stellenanzeigen)
-tests/                     pytest-Suite (keine echten API-Aufrufe/Ports)
+tests/                     pytest-Suite (keine echten API-Aufrufe, kein
+                           Mock-Server; getestet werden Bausteine und
+                           Payload-Erzeugung)
 ```
 
 ## Beispiele
@@ -123,10 +130,18 @@ pytest -q
 
 Neuen Kunden anlegen: siehe [`clients/README.md`](clients/README.md).
 
-**Hinweis zu weiteren Jobbörsen:** aktuell ist nur Indeed angebunden. Ein
-zweites Board (z.B. StepStone) ist bewusst noch nicht gebaut — deren
-Zugang zu einer Self-Service-Posting-API ist ungeklärt (anders als bei
-Indeed) und müsste zuerst recherchiert werden.
+**Hinweis zu weiteren Jobbörsen und Prototypen:** Im Ablauf von
+`run_pipeline.py` ist nur Indeed angebunden. Zusätzlich gibt es drei
+Prototypen, die bewusst *nicht* Teil dieses Ablaufs sind:
+
+- `stepstone_integration/`: StepStone-JobFeed-XML, geprüft gegen einen
+  eigenen lokalen Mock (Port 8892). Ein echter Zugang setzt einen
+  StepStone-Kundenvertrag voraus.
+- `wp_job_manager_integration/`: Veröffentlichen direkt im WordPress-Backend
+  einer Agentur (WP Job Manager), nur gegen eine lokale Testinstallation
+  ausprobiert.
+- `webapp/`: kleine Flask-Oberfläche als dünner Wrapper um dieselbe
+  Pipeline-Logik, ein Prototyp ohne Hosting und ohne Nutzerkonten.
 
 ## Technischer Umfang
 
@@ -137,14 +152,17 @@ Indeed) und müsste zuerst recherchiert werden.
 - SEO-optimierte Formulierungen (Keyword-Wiederholung, strukturierte Titel)
 - Payload-Generator im offiziellen
   [Indeed-Job-Sync-API-Schema](https://docs.indeed.com/job-sync-api/) (GraphQL),
-  inkl. Validierung und Fehlerbehandlung, gegen Mock-Endpunkt getestet
+  inkl. Validierung und Fehlerbehandlung; zusätzlich gegen einen selbst
+  gebauten lokalen Mock-Endpunkt geprüft (manuell per
+  `python indeed_integration/indeed_client.py`, nicht Teil von pytest)
 
 ## Hinweis zur Indeed-Integration
 
 Die Indeed Job Sync API ist ausschließlich für zugelassene ATS-Partner
 zugänglich (kein Self-Service-API-Key). Der Payload-Generator in diesem
-Repo erzeugt Requests im exakten, offiziellen Schema und wird gegen einen
-lokalen Mock-Endpunkt getestet, der Indeeds Antwortverhalten (inkl.
+Repo erzeugt Requests im offiziellen Schema; die Payload-Erzeugung ist per
+pytest abgedeckt. Zusätzlich lässt sich der Request manuell gegen einen
+lokalen Mock-Endpunkt schicken, der Indeeds Antwortverhalten (inkl.
 Validierungsfehlern) nachbildet. Eine produktive Freischaltung würde einen
 Indeed-Partnerstatus voraussetzen – ein Geschäftsprozess außerhalb der
 Entwicklungsarbeit.

@@ -9,8 +9,16 @@
     <div class="error" style="margin-top: 16px;">{{ error }}</div>
   {% endif %}
 
+  {% if raw_text %}
+    <div class="card" style="margin-top: 16px;">
+      <label style="margin-bottom: 8px;">Ursprüngliche Notiz (zum Abgleich, nicht bearbeitbar)</label>
+      <div style="white-space: pre-wrap; font-size: 14px; color: var(--ink-soft);">{{ raw_text }}</div>
+    </div>
+  {% endif %}
+
   <form method="POST" action="{{ url_for('confirm') }}" style="margin-top: 20px;">
     <input type="hidden" name="client_slug" value="{{ client_slug }}">
+    <input type="hidden" name="raw_text" value="{{ raw_text }}">
 
     <div class="two-col">
       <div class="field-group">

@@ -14,6 +14,7 @@ Hosting, keine Nutzerkonten) - siehe MASTERPLAN.md, Wachstumsbedingungen.
 """
 import json
 import logging
+import os
 import sys
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -77,7 +78,7 @@ def structure_job(client_slug: str, raw_text: str) -> dict:
 
     fields = structured.fields.model_dump()
     job_specific_benefits = fields.pop("benefits") or []
-    employment_type = fields.pop("employment_type") or "Vollzeit"
+    employment_type = fields.pop("employment_type") or ""
     reference_number = fields.pop("reference_number") or ""
     salary_info = fields.pop("salary_info") or ""
 
@@ -151,7 +152,8 @@ def finalize_job(client_slug: str, fields: dict, job_specific_benefits: list[str
 
 
 def _review_context(client_slug: str, fields: dict, job_specific_benefits: list[str],
-                     employment_type: str, reference_number: str, salary_info: str, error: str = ""):
+                     employment_type: str, reference_number: str, salary_info: str,
+                     raw_text: str = "", error: str = ""):
     return dict(
         client_slug=client_slug,
         fields=fields,
@@ -161,6 +163,7 @@ def _review_context(client_slug: str, fields: dict, job_specific_benefits: list[
         employment_type=employment_type,
         reference_number=reference_number,
         salary_info=salary_info,
+        raw_text=raw_text,
         error=error,
     )
 
@@ -189,12 +192,13 @@ def generate():
     except StructuringError as exc:
         return render_template("form.html", clients=list_client_slugs(), error=f"KI-Strukturierung fehlgeschlagen: {exc}")
 
-    return render_template("review.html", **_review_context(client_slug, **structured))
+    return render_template("review.html", **_review_context(client_slug, raw_text=raw_text, **structured))
 
 
 @app.route("/confirm", methods=["POST"])
 def confirm():
     client_slug = request.form.get("client_slug", "")
+    raw_text = request.form.get("raw_text", "")
     fields = {
         "job_title": request.form.get("job_title", "").strip(),
         "client_description": request.form.get("client_description", "").strip(),
@@ -204,7 +208,7 @@ def confirm():
         "profile": _text_to_list(request.form.get("profile", "")),
     }
     job_specific_benefits = _text_to_list(request.form.get("benefits", ""))
-    employment_type = request.form.get("employment_type", "").strip() or "Vollzeit"
+    employment_type = request.form.get("employment_type", "").strip()
     reference_number = request.form.get("reference_number", "").strip()
     salary_info = request.form.get("salary_info", "").strip()
 
@@ -216,7 +220,7 @@ def confirm():
         error = f"Noch nicht vollstaendig, bitte ergaenzen: {missing_labels}"
         return render_template("review.html", **_review_context(
             client_slug, fields, job_specific_benefits, employment_type, reference_number,
-            salary_info, error=error))
+            salary_info, raw_text=raw_text, error=error))
     except ClientConfigError as exc:
         return render_template("form.html", clients=list_client_slugs(), error=f"Kundenkonfiguration: {exc}")
 
@@ -237,4 +241,8 @@ def download(client_slug: str, output_dir: str, filename: str):
 
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5050)
+    # Debug-Modus (Werkzeug-Debugger) erlaubt Ausfuehrung beliebigen Codes im Browser -
+    # standardmaessig aus, nur ueber die Umgebungsvariable bewusst fuer die eigene lokale
+    # Entwicklung aktivierbar (siehe Docstring oben fuer den empfohlenen `flask --debug`-Weg).
+    debug_mode = os.environ.get("RECRUITFLOW_DEBUG", "").lower() in ("1", "true")
+    app.run(debug=debug_mode, port=5050)
